@@ -4,7 +4,7 @@ server:
 
 spring:
     application:
-        name: monitoring-service
+        name: monitoring
     security:
         user:
             name: "user"
