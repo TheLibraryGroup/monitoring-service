@@ -13,44 +13,51 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.UUID;
 
-@Configuration(proxyBeanMethods = false)
+@Configuration( proxyBeanMethods = false )
 public class SecuritySecureConfig extends WebSecurityConfigurerAdapter {
 
 	private final AdminServerProperties adminServer;
 
-	public SecuritySecureConfig(AdminServerProperties adminServer) {
+	public SecuritySecureConfig( AdminServerProperties adminServer ) {
 		this.adminServer = adminServer;
 	}
 
 	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
-		successHandler.setTargetUrlParameter("redirectTo");
-		successHandler.setDefaultTargetUrl(this.adminServer.path("/"));
+	protected void configure( HttpSecurity http ) throws Exception {
+		SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler( );
+		successHandler.setTargetUrlParameter( "redirectTo" );
+		successHandler.setDefaultTargetUrl( this.adminServer.path( "/" ) );
 
 		http
-				.authorizeRequests().antMatchers(HttpMethod.GET, "/actuator/**").permitAll().and()
-				.authorizeRequests(
-				(authorizeRequests) -> authorizeRequests.antMatchers(this.adminServer.path("/assets/**")).permitAll()
-						                       .antMatchers(this.adminServer.path("/login")).permitAll().anyRequest().authenticated()
-		).formLogin(
-				(formLogin) -> formLogin.loginPage(this.adminServer.path("/login")).successHandler(successHandler).and()
-		).logout((logout) -> logout.logoutUrl(this.adminServer.path("/logout"))).httpBasic( Customizer.withDefaults())
-				.csrf((csrf) -> csrf.csrfTokenRepository( CookieCsrfTokenRepository.withHttpOnlyFalse())
-						                .ignoringRequestMatchers(
-								                new AntPathRequestMatcher(this.adminServer.path("/instances"),
-										                HttpMethod.POST.toString()),
-								                new AntPathRequestMatcher(this.adminServer.path("/instances/*"),
-										                HttpMethod.DELETE.toString()),
-								                new AntPathRequestMatcher(this.adminServer.path("/actuator/**"))
-						                ))
-				.rememberMe((rememberMe) -> rememberMe.key( UUID.randomUUID().toString()).tokenValiditySeconds(1209600));
+//			.csrf(  ).ignoringAntMatchers("/actuator/**"  ).and()
+//			.csrf(  ).ignoringAntMatchers("/instances/**"  ).and()
+			.authorizeRequests( ).antMatchers( HttpMethod.GET, "/actuator/**" ).permitAll( ).and( )
+			.authorizeRequests(
+					( authorizeRequests ) -> authorizeRequests.antMatchers( this.adminServer.path( "/assets/**" ) ).permitAll( )
+							                         .antMatchers( this.adminServer.path( "/login" ) ).permitAll( ).anyRequest( ).authenticated( ) )
+			.formLogin(
+				( formLogin ) ->
+						formLogin.loginPage( this.adminServer.path( "/login" ) ).successHandler( successHandler ).and( ) )
+			.logout(
+				( logout ) ->
+						logout.logoutUrl( this.adminServer.path( "/logout" ) ) ).httpBasic( Customizer.withDefaults( ) )
+			.csrf( ( csrf ) ->
+						csrf.csrfTokenRepository( CookieCsrfTokenRepository.withHttpOnlyFalse( ) )
+				                   .ignoringRequestMatchers(
+						                   new AntPathRequestMatcher( this.adminServer.path( "/instances" ),
+								                   HttpMethod.POST.toString( ) ),
+						                   new AntPathRequestMatcher( this.adminServer.path( "/instances/*" ),
+								                   HttpMethod.DELETE.toString( ) ),
+						                   new AntPathRequestMatcher( this.adminServer.path( "/actuator/**" ) )
+				                   ) )
+			.rememberMe( ( rememberMe ) ->
+					             rememberMe.key( UUID.randomUUID( ).toString( ) ).tokenValiditySeconds( 1209600 ) );
 	}
 
 	// Required to provide UserDetailsService for "remember functionality"
 	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.inMemoryAuthentication().withUser("user").password("{noop}password").roles("USER");
+	protected void configure( AuthenticationManagerBuilder auth ) throws Exception {
+		auth.inMemoryAuthentication( ).withUser( "user" ).password( "{noop}password" ).roles( "USER" );
 	}
 
 }
